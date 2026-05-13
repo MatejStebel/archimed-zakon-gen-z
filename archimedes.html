@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Archimédův zákon — no cap fyzika fr fr</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: #0a0a0f;
+    color: #f0eee8;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .page { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  .hero {
+    text-align: center;
+    padding: 3rem 0 2rem;
+    border-bottom: 1px solid #2a2a3a;
+    margin-bottom: 2.5rem;
+  }
+
+  .badge {
+    display: inline-block;
+    background: #1a1a2e;
+    border: 1px solid #3a3aff44;
+    color: #7b7bff;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 100px;
+    margin-bottom: 1.2rem;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3.5rem, 10vw, 6rem);
+    line-height: 0.95;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #fff 0%, #a0a0ff 50%, #ff6b9d 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+  }
+
+  .hero-sub {
+    font-size: 1.1rem;
+    color: #888;
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  .hero-sub strong { color: #aaa; }
+
+  .section {
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section:nth-child(2) { animation-delay: 0.1s; }
+  .section:nth-child(3) { animation-delay: 0.2s; }
+  .section:nth-child(4) { animation-delay: 0.3s; }
+  .section:nth-child(5) { animation-delay: 0.4s; }
+
+  .sec-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #5a5a7a;
+    margin-bottom: 0.8rem;
+  }
+
+  h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 1px;
+    color: #fff;
+    margin-bottom: 0.8rem;
+  }
+
+  .card {
+    background: #111118;
+    border: 1px solid #222230;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+  }
+
+  .card p {
+    color: #aaa;
+    line-height: 1.7;
+    font-size: 0.95rem;
+  }
+
+  .card p strong { color: #e0e0ff; }
+
+  .highlight-box {
+    background: linear-gradient(135deg, #0d0d2b 0%, #1a1a3e 100%);
+    border: 1px solid #3333aa55;
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
+    margin: 1.5rem 0;
+    text-align: center;
+  }
+
+  .formula {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.5rem;
+    letter-spacing: 2px;
+    color: #8888ff;
+    margin: 0.5rem 0;
+  }
+
+  .formula-desc {
+    font-size: 0.82rem;
+    color: #666;
+    letter-spacing: 0.5px;
+  }
+
+  .tank-section {
+    background: #111118;
+    border: 1px solid #222230;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+  }
+
+  .tank-title {
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 1rem;
+  }
+
+  .tank-container {
+    position: relative;
+    width: 200px;
+    height: 220px;
+    margin: 0 auto 1.5rem;
+  }
+
+  .tank-body {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 140px;
+    height: 200px;
+    border: 2px solid #3a3a6a;
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    overflow: hidden;
+    background: #0a0a1a;
+  }
+
+  .water {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(180deg, #1a4a8a88, #0d2d5e);
+    transition: height 0.5s ease;
+    height: 55%;
+  }
+
+  .water::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: #4488ff44;
+    border-radius: 2px;
+    animation: wave 2s linear infinite;
+  }
+
+  @keyframes wave {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
+  }
+
+  .obj {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 8px;
+    transition: bottom 0.5s ease, background 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: default;
+    z-index: 10;
+  }
+
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 1rem;
+  }
+
+  .ctrl-group label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #5a5a7a;
+    margin-bottom: 6px;
+  }
+
+  .ctrl-group select {
+    width: 100%;
+    background: #0d0d1a;
+    border: 1px solid #2a2a4a;
+    color: #ccc;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: 'Space Grotesk', sans-serif;
+    cursor: pointer;
+    appearance: none;
+  }
+
+  .result-bar {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #0d0d1a;
+    border-radius: 12px;
+    border: 1px solid #2a2a4a;
+    font-size: 0.85rem;
+    color: #888;
+    line-height: 1.8;
+  }
+
+  .result-bar strong { color: #a0a0ff; }
+  .result-bar .verdict { font-size: 1rem; margin-top: 0.4rem; }
+  .result-bar .verdict.float { color: #44dd88; }
+  .result-bar .verdict.sink { color: #ff6666; }
+
+  .examples-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 480px) {
+    .examples-grid { grid-template-columns: repeat(2, 1fr); }
+    .controls { grid-template-columns: 1fr; }
+    h1 { font-size: 3rem; }
+  }
+
+  .ex-card {
+    background: #111118;
+    border: 1px solid #222230;
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    transition: border-color 0.2s, transform 0.2s;
+    cursor: default;
+  }
+
+  .ex-card:hover { border-color: #4444aa; transform: translateY(-2px); }
+
+  .ex-icon { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+
+  .ex-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #ccc;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .ex-fact { font-size: 0.72rem; color: #666; line-height: 1.4; }
+
+  .tldr {
+    background: linear-gradient(135deg, #1a0d2e, #0d1a2e);
+    border: 1px solid #44336655;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-top: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tldr::before {
+    content: 'NGL';
+    position: absolute;
+    right: -10px;
+    top: -20px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 8rem;
+    color: #ffffff06;
+    pointer-events: none;
+    letter-spacing: 4px;
+  }
+
+  .tldr h2 { color: #cc88ff; margin-bottom: 1rem; }
+
+  .tldr-list { list-style: none; }
+  .tldr-list li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #ffffff08;
+    color: #aaa;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    display: flex;
+    gap: 10px;
+  }
+  .tldr-list li:last-child { border: none; }
+  .tldr-list li::before { content: '→'; color: #8866ff; flex-shrink: 0; }
+
+  .footer {
+    text-align: center;
+    padding-top: 2rem;
+    font-size: 0.75rem;
+    color: #333;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hero">
+    <div class="badge">Fyzika 7. třída • No cap • Slay 💅</div>
+    <h1>Archimédův<br>zákon</h1>
+    <p class="hero-sub">Proč lodě plavou a kameny klesají? Nahý chlap ve vaně před 2300 lety to vyřešil. <strong>Největší W v historii vědy, fr fr.</strong></p>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">01 — Origin Story (lowkey insane)</div>
+    <h2>Ten moment ve vaně 🛁</h2>
+    <div class="card">
+      <p>Archimédés byl <strong>největší sigma Ancient Řecka</strong> — matematik, fyzik, inženýr, skoro Iron Man té doby. Král Hierón II. ho pověřil záhadou: je tahle koruna opravdu ze zlata, nebo ho zlatník <strong>scamoval</strong>? Normální člověk by to vzdal. Archimédés šel do vany.</p>
+      <p style="margin-top:0.8rem">Lehl si do plné vany, voda přetekla přes okraj a on měl ten největší <strong>aha moment v celé historii vědy</strong>. Vyskočil ven — <em>úplně nahý</em>, lidi — a začal běhat po ulici a křičet <strong>HEURÉKA!</strong> (= "Našel jsem to!"). Král se to dozvěděl, zlatník přiznal podvod a dostal co zasloužil. Archimédés? Ate and left no crumbs. 🍽️</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">02 — Core Lore (učit se to fakt musíš)</div>
+    <h2>Co ten zákon říká? 📖</h2>
+    <div class="card">
+      <p>Okay, takže. Když hodíš něco do vody, voda se tomu <strong>snaží vzdorovat</strong> — tlačí na těleso <em>nahoru</em>. Tato síla se jmenuje <strong>vztlaková síla</strong> (anglicky "buoyancy", vyslov to před učitelem a máš instant rizz). Jak velká je tahle síla? Přesně tolik, kolik váží <strong>voda, kterou jsi vytlačil</strong>. Ne ty. Voda. Pochop ten rozdíl nebo test nepřežiješ.</p>
+      <p style="margin-top:0.8rem">Plave věc, nebo ne? Záleží na <strong>hustotě</strong> — jestli je těleso lehčí než stejný objem vody, plave. Těžší? Jde ke dnu jak ty při prvním písemném v pondělí ráno. 💀</p>
+    </div>
+    <div class="highlight-box">
+      <div class="formula-desc" style="margin-bottom:0.5rem">THE FORMULA. NAUČIT. NO EXCUSES.</div>
+      <div class="formula">F = ρ × g × V</div>
+      <div class="formula-desc">ρ (rho) = hustota kapaliny &nbsp;|&nbsp; g = 9,81 m/s² (gravitace, náš villain) &nbsp;|&nbsp; V = objem ponořené části</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">03 — Hands-on era (konečně něco fun)</div>
+    <h2>Vyzkoušej si to 🧪</h2>
+    <div class="tank-section">
+      <div class="tank-title">Vyber těleso a kapalinu. Bude to buď W nebo L. Žádné inbetween.</div>
+
+      <div class="tank-container" id="tankWrap">
+        <div class="tank-body">
+          <div class="water" id="water"></div>
+          <div class="obj" id="obj" style="width:50px;height:40px;bottom:60px;">🪵</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl-group">
+          <label>Těleso</label>
+          <select id="objSel">
+            <option value="wood">🪵 Dřevo</option>
+            <option value="plastic">🛢️ Plastový kelímek</option>
+            <option value="steel">⚙️ Ocelová kulička</option>
+            <option value="ice">🧊 Led</option>
+            <option value="cork">🍾 Korek</option>
+            <option value="rock">🪨 Kámen</option>
+          </select>
+        </div>
+        <div class="ctrl-group">
+          <label>Kapalina</label>
+          <select id="liqSel">
+            <option value="water">💧 Voda</option>
+            <option value="salt">🌊 Slaná voda</option>
+            <option value="oil">🫙 Olej</option>
+            <option value="honey">🍯 Med</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="result-bar" id="result">
+        Vyber těleso a kapalinu. Bude to buď W nebo L. No inbetween. 👆
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">04 — Tohle potkáš IRL (trust)</div>
+    <h2>Proč se to hodí znát 🌍</h2>
+    <div class="examples-grid">
+      <div class="ex-card">
+        <span class="ex-icon">🚢</span>
+        <div class="ex-name">Loď z oceli</div>
+        <div class="ex-fact">Ocel klesá, ale dutá loď je slay. Vytlačí tolik vody, že vztlak ji unese. Tvar > materiál, periodt.</div>
+      </div>
+      <div class="ex-card">
+        <span class="ex-icon">🤿</span>
+        <div class="ex-name">Potápěč</div>
+        <div class="ex-fact">Nafukuje BCD vestu — větší objem = větší vztlak = stoupá. Fyzika jako osobní výtah. Fr.</div>
+      </div>
+      <div class="ex-card">
+        <span class="ex-icon">🎈</span>
+        <div class="ex-name">Horkovzdušný balón</div>
+        <div class="ex-fact">Vzduch je taky "kapalina" ve fyzikálním smyslu. Teplý vzduch = lehčí = plave. Big brain moment.</div>
+      </div>
+      <div class="ex-card">
+        <span class="ex-icon">🧊</span>
+        <div class="ex-name">Ledovec</div>
+        <div class="ex-fact">90 % pod vodou, 10 % vidíš. Led je lehčí než voda. Titanic to zjistil příliš pozdě. Rip. 💀</div>
+      </div>
+      <div class="ex-card">
+        <span class="ex-icon">🏖️</span>
+        <div class="ex-name">Mrtvé moře</div>
+        <div class="ex-fact">Tak přesolená voda, že se utopit physically nejde. Hustota porazí gravitaci. You just float, bestie.</div>
+      </div>
+      <div class="ex-card">
+        <span class="ex-icon">🚀</span>
+        <div class="ex-name">Ponorka</div>
+        <div class="ex-fact">Napouští nebo vypouští vodu z nádrží → mění hustotu → klesá nebo stoupá. Archimédés by plakal radostí.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">05 — Před testem (čti tohle aspoň)</div>
+    <div class="tldr">
+      <h2>TLDR — Cheat Sheet 📝</h2>
+      <ul class="tldr-list">
+        <li>Každé těleso v kapalině cítí sílu <strong>vzhůru</strong>. Říkáme tomu vztlaková síla. Povinné info, no cap.</li>
+        <li>Vztlaková síla = tíha <strong>vytlačené kapaliny</strong>. NE tělesa. Tohle lidi pořád pletou a dostávají 3. Don't be that guy.</li>
+        <li>Hustota tělesa &lt; hustota kapaliny → PLAVE. Hustota tělesa &gt; hustota kapaliny → GG jde ke dnu.</li>
+        <li>Vzorec: <strong>F = ρ × g × V</strong>. Rho = řecké pí ale na hustotu. G = 9,81. V = objem. Tattoo si to.</li>
+        <li>Hustší kapalina (slaná voda, med) = větší vztlak. Proto je snazší plavat v moři než v bazénu.</li>
+        <li>Archimédés: 287–212 př. n. l. Zemřel tak, že vojákovi řekl "neruš mě, řeším matematiku". Absolute sigma grindset. 🪦</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section" style="margin-bottom:0">
+    <div class="card" style="border-color:#2a1a3a; background:#0d0a18; text-align:center; padding:1.2rem">
+      <p style="font-size:0.82rem; color:#555">Jestli ti tohle pomohlo, nauč kamaráda. Šíř vzdělání jako virus. 🦠<br>A nezapomeň — fyzika není cringe. Je to jen matematika s příběhem.</p>
+    </div>
+  </div>
+
+  <div class="footer">FYZIKA • ARCHIMEDÉS 287–212 PŘ. N. L. • GOAT ERA • 7. TŘÍDA ZŠ • NO SKIP</div>
+
+</div>
+
+<script>
+const objects = {
+  wood:    { emoji: '🪵', name: 'Dřevo', density: 600,   label: '600 kg/m³' },
+  plastic: { emoji: '🛢️', name: 'Plast', density: 900,   label: '900 kg/m³' },
+  steel:   { emoji: '⚙️', name: 'Ocel', density: 7800,  label: '7800 kg/m³' },
+  ice:     { emoji: '🧊', name: 'Led', density: 917,   label: '917 kg/m³' },
+  cork:    { emoji: '🍾', name: 'Korek', density: 120,   label: '120 kg/m³' },
+  rock:    { emoji: '🪨', name: 'Kámen', density: 2700,  label: '2700 kg/m³' },
+};
+
+const liquids = {
+  water: { emoji: '💧', name: 'Voda', density: 1000, color1: '#1a4a8a88', color2: '#0d2d5e' },
+  salt:  { emoji: '🌊', name: 'Slaná voda', density: 1025, color1: '#1a6a5a88', color2: '#0d3d3e' },
+  oil:   { emoji: '🫙', name: 'Olej', density: 870,  color1: '#8a7a1a88', color2: '#5e4d0d' },
+  honey: { emoji: '🍯', name: 'Med', density: 1400, color1: '#8a5a1a88', color2: '#5e3d0d' },
+};
+
+const objEl = document.getElementById('obj');
+const waterEl = document.getElementById('water');
+const resultEl = document.getElementById('result');
+
+function update() {
+  const oKey = document.getElementById('objSel').value;
+  const lKey = document.getElementById('liqSel').value;
+  const o = objects[oKey];
+  const l = liquids[lKey];
+
+  const floats = o.density < l.density;
+  const partial = floats ? (o.density / l.density) : 1;
+
+  waterEl.style.background = `linear-gradient(180deg, ${l.color1}, ${l.color2})`;
+  objEl.textContent = o.emoji;
+
+  const tankH = 200;
+  const waterH = 0.55;
+  const waterPx = tankH * waterH;
+
+  if (floats) {
+    const objH = 40;
+    const bottomPos = waterPx - (objH * partial);
+    objEl.style.bottom = Math.max(bottomPos, waterPx - objH + 2) + 'px';
+  } else {
+    objEl.style.bottom = '4px';
+  }
+
+  const ratio = (o.density / l.density).toFixed(2);
+
+  resultEl.innerHTML = `
+    <strong>${o.emoji} ${o.name}</strong> (${o.label}) vs <strong>${l.emoji} ${l.name}</strong> (${l.density} kg/m³)<br>
+    Hustota tělesa ÷ hustota kapaliny = <strong>${ratio}</strong><br>
+    <div class="verdict ${floats ? 'float' : 'sink'}">
+      ${floats
+        ? `✅ W — PLAVE! Vztlak > tíha. ${partial < 0.5 ? 'Většina vyčnívá nad hladinu, bestie.' : 'Skoro celé pod vodou, ale stále W.'}`
+        : `❌ L — KLESÁ. Těleso je příliš dense. Vztlak to nezvládne. Gg no re.`}
+    </div>
+  `;
+}
+
+document.getElementById('objSel').addEventListener('change', update);
+document.getElementById('liqSel').addEventListener('change', update);
+update();
+</script>
+</body>
+</html>
