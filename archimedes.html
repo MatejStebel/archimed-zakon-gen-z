@@ -370,40 +370,44 @@
     <div class="sec-label">03 — Hands-on era (konečně něco fun)</div>
     <h2>Vyzkoušej si to 🧪</h2>
     <div class="tank-section">
-      <div class="tank-title">Vyber těleso a kapalinu. Bude to buď W nebo L. Žádné inbetween.</div>
+      <div class="tank-title">Vyber těleso a kapalinu — pak ho hoď do vody tlačítkem. Bude to buď W nebo L.</div>
 
-      <div class="tank-container" id="tankWrap">
-        <div class="tank-body">
-          <div class="water" id="water"></div>
-          <div class="obj" id="obj" style="width:50px;height:40px;bottom:60px;">🪵</div>
-        </div>
-      </div>
+      <canvas id="simCanvas" width="560" height="300" style="display:block;width:100%;border-radius:12px;background:#07070f;margin:0 0 1rem"></canvas>
 
       <div class="controls">
         <div class="ctrl-group">
           <label>Těleso</label>
           <select id="objSel">
-            <option value="wood">🪵 Dřevo</option>
-            <option value="plastic">🛢️ Plastový kelímek</option>
-            <option value="steel">⚙️ Ocelová kulička</option>
-            <option value="ice">🧊 Led</option>
-            <option value="cork">🍾 Korek</option>
-            <option value="rock">🪨 Kámen</option>
+            <option value="wood">🪵 Dřevo (600 kg/m³)</option>
+            <option value="cork">🍾 Korek (120 kg/m³)</option>
+            <option value="ice">🧊 Led (917 kg/m³)</option>
+            <option value="plastic">🟡 Plast (900 kg/m³)</option>
+            <option value="steel">⚙️ Ocel (7800 kg/m³)</option>
+            <option value="rock">🪨 Kámen (2700 kg/m³)</option>
           </select>
         </div>
         <div class="ctrl-group">
           <label>Kapalina</label>
           <select id="liqSel">
-            <option value="water">💧 Voda</option>
-            <option value="salt">🌊 Slaná voda</option>
-            <option value="oil">🫙 Olej</option>
-            <option value="honey">🍯 Med</option>
+            <option value="water">💧 Voda (1000 kg/m³)</option>
+            <option value="salt">🌊 Slaná voda (1025 kg/m³)</option>
+            <option value="oil">🫙 Olej (870 kg/m³)</option>
+            <option value="honey">🍯 Med (1400 kg/m³)</option>
           </select>
         </div>
       </div>
 
+      <div style="text-align:center;margin:0.8rem 0">
+        <button id="dropBtn" style="background:#1a1a3e;border:1px solid #4444aa;color:#aaaaff;padding:10px 28px;border-radius:100px;font-family:inherit;font-size:0.9rem;cursor:pointer;letter-spacing:1px;transition:background 0.2s">
+          ▼ HODIT DO VODY
+        </button>
+        <button id="resetBtn" style="background:transparent;border:1px solid #2a2a3a;color:#555;padding:10px 20px;border-radius:100px;font-family:inherit;font-size:0.9rem;cursor:pointer;margin-left:8px;transition:background 0.2s">
+          ↺ RESET
+        </button>
+      </div>
+
       <div class="result-bar" id="result">
-        Vyber těleso a kapalinu. Bude to buď W nebo L. No inbetween. 👆
+        Nastav těleso a kapalinu, pak klikni ▼ HODIT DO VODY.
       </div>
     </div>
   </div>
@@ -472,65 +476,364 @@
 
 <script>
 const objects = {
-  wood:    { emoji: '🪵', name: 'Dřevo', density: 600,   label: '600 kg/m³' },
-  plastic: { emoji: '🛢️', name: 'Plast', density: 900,   label: '900 kg/m³' },
-  steel:   { emoji: '⚙️', name: 'Ocel', density: 7800,  label: '7800 kg/m³' },
-  ice:     { emoji: '🧊', name: 'Led', density: 917,   label: '917 kg/m³' },
-  cork:    { emoji: '🍾', name: 'Korek', density: 120,   label: '120 kg/m³' },
-  rock:    { emoji: '🪨', name: 'Kámen', density: 2700,  label: '2700 kg/m³' },
+  wood:    { name: 'Dřevo',  density: 600,  color: '#8B5E3C', border: '#6B3F1C', emoji: '🪵' },
+  cork:    { name: 'Korek',  density: 120,  color: '#C8A96E', border: '#A07848', emoji: '🍾' },
+  ice:     { name: 'Led',    density: 917,  color: '#BDE0F8', border: '#7BBFE8', emoji: '🧊' },
+  plastic: { name: 'Plast',  density: 900,  color: '#F5D040', border: '#C8A800', emoji: '🟡' },
+  steel:   { name: 'Ocel',   density: 7800, color: '#8899AA', border: '#4A5A6A', emoji: '⚙️' },
+  rock:    { name: 'Kámen',  density: 2700, color: '#888070', border: '#554E46', emoji: '🪨' },
 };
-
 const liquids = {
-  water: { emoji: '💧', name: 'Voda', density: 1000, color1: '#1a4a8a88', color2: '#0d2d5e' },
-  salt:  { emoji: '🌊', name: 'Slaná voda', density: 1025, color1: '#1a6a5a88', color2: '#0d3d3e' },
-  oil:   { emoji: '🫙', name: 'Olej', density: 870,  color1: '#8a7a1a88', color2: '#5e4d0d' },
-  honey: { emoji: '🍯', name: 'Med', density: 1400, color1: '#8a5a1a88', color2: '#5e3d0d' },
+  water: { name: 'Voda',       density: 1000, deep: '#0d2d5e', mid: '#1a4a8a', surf: '#3a7ac8', alpha: 0.82 },
+  salt:  { name: 'Slaná voda', density: 1025, deep: '#0d3d3e', mid: '#1a5a5c', surf: '#3aacb0', alpha: 0.82 },
+  oil:   { name: 'Olej',       density: 870,  deep: '#3a2e00', mid: '#6a5200', surf: '#c8a000', alpha: 0.78 },
+  honey: { name: 'Med',        density: 1400, deep: '#3a1e00', mid: '#7a3e00', surf: '#e07800', alpha: 0.88 },
 };
 
-const objEl = document.getElementById('obj');
-const waterEl = document.getElementById('water');
-const resultEl = document.getElementById('result');
+const canvas = document.getElementById('simCanvas');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
 
-function update() {
-  const oKey = document.getElementById('objSel').value;
-  const lKey = document.getElementById('liqSel').value;
-  const o = objects[oKey];
-  const l = liquids[lKey];
+const LIQUID_TOP = H * 0.38;
+const OBJ_W = 70, OBJ_H = 58;
+const GRAVITY = 1800;
+const g = 9.81;
 
-  const floats = o.density < l.density;
-  const partial = floats ? (o.density / l.density) : 1;
+let liq, obj;
+let state = 'idle'; // idle | falling | settling | resting
+let objY = 40;
+let objVY = 0;
+let wavePhase = 0;
+let splashParticles = [];
+let bubbles = [];
+let arrowAlpha = 0;
+let settleTarget = 0;
+let animId;
 
-  waterEl.style.background = `linear-gradient(180deg, ${l.color1}, ${l.color2})`;
-  objEl.textContent = o.emoji;
+function getLiq() { return liquids[document.getElementById('liqSel').value]; }
+function getObj() { return objects[document.getElementById('objSel').value]; }
 
-  const tankH = 200;
-  const waterH = 0.55;
-  const waterPx = tankH * waterH;
-
-  if (floats) {
-    const objH = 40;
-    const bottomPos = waterPx - (objH * partial);
-    objEl.style.bottom = Math.max(bottomPos, waterPx - objH + 2) + 'px';
-  } else {
-    objEl.style.bottom = '4px';
-  }
-
-  const ratio = (o.density / l.density).toFixed(2);
-
-  resultEl.innerHTML = `
-    <strong>${o.emoji} ${o.name}</strong> (${o.label}) vs <strong>${l.emoji} ${l.name}</strong> (${l.density} kg/m³)<br>
-    Hustota tělesa ÷ hustota kapaliny = <strong>${ratio}</strong><br>
-    <div class="verdict ${floats ? 'float' : 'sink'}">
-      ${floats
-        ? `✅ W — PLAVE! Vztlak > tíha. ${partial < 0.5 ? 'Většina vyčnívá nad hladinu, bestie.' : 'Skoro celé pod vodou, ale stále W.'}`
-        : `❌ L — KLESÁ. Těleso je příliš dense. Vztlak to nezvládne. Gg no re.`}
-    </div>
-  `;
+function reset(autoStart) {
+  obj = getObj(); liq = getLiq();
+  state = 'idle';
+  objY = 30;
+  objVY = 0;
+  splashParticles = [];
+  bubbles = [];
+  arrowAlpha = 0;
+  document.getElementById('result').innerHTML = 'Nastav těleso a kapalinu, pak klikni ▼ HODIT DO VODY.';
+  if (autoStart) drop();
 }
 
-document.getElementById('objSel').addEventListener('change', update);
-document.getElementById('liqSel').addEventListener('change', update);
-update();
+function drop() {
+  obj = getObj(); liq = getLiq();
+  if (state === 'falling' || state === 'settling') return;
+  state = 'falling';
+  objVY = 0;
+}
+
+function spawnSplash(cx) {
+  for (let i = 0; i < 18; i++) {
+    const angle = -Math.PI + Math.random() * Math.PI;
+    const speed = 80 + Math.random() * 160;
+    splashParticles.push({
+      x: cx, y: LIQUID_TOP,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 120,
+      life: 1, maxLife: 0.5 + Math.random() * 0.4,
+      r: 2 + Math.random() * 3,
+    });
+  }
+}
+
+function spawnBubble() {
+  const cx = W / 2 + (Math.random() - 0.5) * OBJ_W * 0.6;
+  bubbles.push({ x: cx, y: objY + OBJ_H, vx: (Math.random()-0.5)*18, vy: -40-Math.random()*40, life: 1, r: 2+Math.random()*3 });
+}
+
+function drawWater(lq) {
+  // deep body
+  const grad = ctx.createLinearGradient(0, LIQUID_TOP, 0, H);
+  grad.addColorStop(0, lq.mid + 'cc');
+  grad.addColorStop(1, lq.deep + 'ff');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, LIQUID_TOP, W, H - LIQUID_TOP);
+
+  // animated surface wave
+  ctx.beginPath();
+  ctx.moveTo(0, LIQUID_TOP);
+  for (let x = 0; x <= W; x += 2) {
+    const y = LIQUID_TOP + Math.sin(x * 0.035 + wavePhase) * 3 + Math.sin(x * 0.07 - wavePhase * 1.3) * 1.5;
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+  const sg = ctx.createLinearGradient(0, LIQUID_TOP, 0, LIQUID_TOP + 30);
+  sg.addColorStop(0, lq.surf + '88');
+  sg.addColorStop(1, lq.surf + '00');
+  ctx.fillStyle = sg;
+  ctx.fill();
+
+  // shimmer lines
+  ctx.strokeStyle = lq.surf + '44';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 4; i++) {
+    const yy = LIQUID_TOP + 20 + i * 22;
+    ctx.beginPath();
+    ctx.moveTo(20, yy + Math.sin(wavePhase + i) * 4);
+    ctx.lineTo(W - 20, yy + Math.sin(wavePhase + i + 1.5) * 4);
+    ctx.stroke();
+  }
+}
+
+function drawObject(o, y) {
+  const cx = W / 2, cy = y + OBJ_H / 2;
+  const r = 10;
+  // shadow/glow
+  ctx.shadowColor = o.border;
+  ctx.shadowBlur = 12;
+  // rounded rect
+  ctx.beginPath();
+  ctx.moveTo(cx - OBJ_W/2 + r, y);
+  ctx.lineTo(cx + OBJ_W/2 - r, y);
+  ctx.arcTo(cx + OBJ_W/2, y, cx + OBJ_W/2, y + r, r);
+  ctx.lineTo(cx + OBJ_W/2, y + OBJ_H - r);
+  ctx.arcTo(cx + OBJ_W/2, y+OBJ_H, cx+OBJ_W/2-r, y+OBJ_H, r);
+  ctx.lineTo(cx - OBJ_W/2 + r, y + OBJ_H);
+  ctx.arcTo(cx-OBJ_W/2, y+OBJ_H, cx-OBJ_W/2, y+OBJ_H-r, r);
+  ctx.lineTo(cx - OBJ_W/2, y + r);
+  ctx.arcTo(cx-OBJ_W/2, y, cx-OBJ_W/2+r, y, r);
+  ctx.closePath();
+
+  const fg = ctx.createLinearGradient(cx-OBJ_W/2, y, cx+OBJ_W/2, y+OBJ_H);
+  fg.addColorStop(0, o.color + 'ff');
+  fg.addColorStop(1, o.border + 'ff');
+  ctx.fillStyle = fg;
+  ctx.fill();
+  ctx.strokeStyle = o.border;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // label
+  ctx.fillStyle = '#ffffffcc';
+  ctx.font = 'bold 11px Space Grotesk, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(o.name, cx, cy - 4);
+  ctx.fillStyle = '#ffffff88';
+  ctx.font = '10px Space Grotesk, sans-serif';
+  ctx.fillText(o.density + ' kg/m³', cx, cy + 10);
+}
+
+function drawForceArrows(y, submergedFrac, floats) {
+  if (arrowAlpha <= 0) return;
+  const cx = W / 2;
+  const objMid = y + OBJ_H / 2;
+  ctx.globalAlpha = Math.min(arrowAlpha, 1);
+
+  const maxArrow = 55;
+  const gravN  = obj.density * g;
+  const buoyN  = liq.density * g * submergedFrac;
+  const maxN   = Math.max(gravN, buoyN, 1);
+
+  const gravLen  = (gravN / maxN) * maxArrow;
+  const buoyLen  = (buoyN / maxN) * maxArrow;
+
+  // gravity arrow (down, red side)
+  drawArrow(ctx, cx + OBJ_W/2 + 14, objMid, cx + OBJ_W/2 + 14, objMid + gravLen, '#ff5555', 'F_tíha', 'below');
+  // buoyancy arrow (up, blue/green)
+  drawArrow(ctx, cx - OBJ_W/2 - 14, objMid, cx - OBJ_W/2 - 14, objMid - buoyLen, '#55ddaa', 'F_vztlak', 'above');
+
+  ctx.globalAlpha = 1;
+}
+
+function drawArrow(ctx, x1, y1, x2, y2, color, label, labelPos) {
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.sqrt(dx*dx+dy*dy);
+  if (len < 4) return;
+  const headLen = 10, headW = 5;
+  const nx = dx/len, ny = dy/len;
+
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2 - nx*headLen, y2 - ny*headLen);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - nx*headLen - ny*headW, y2 - ny*headLen + nx*headW);
+  ctx.lineTo(x2 - nx*headLen + ny*headW, y2 - ny*headLen - nx*headW);
+  ctx.closePath(); ctx.fill();
+
+  ctx.fillStyle = color;
+  ctx.font = 'bold 10px Space Grotesk, sans-serif';
+  ctx.textAlign = 'center';
+  const lx = x2 + (x1 > W/2 ? 28 : -28);
+  ctx.fillText(label, lx, labelPos === 'above' ? y2 - 4 : y2 + 14);
+}
+
+function drawLiquidLabel(lq) {
+  ctx.fillStyle = '#ffffff22';
+  ctx.font = 'bold 11px Space Grotesk, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(lq.name + ' · ' + lq.density + ' kg/m³', 12, H - 10);
+}
+
+function drawTankWalls() {
+  ctx.strokeStyle = '#3a3a6a';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, W-2, H-2);
+}
+
+function updateResult(o, l, floats, subFrac) {
+  const ratio = (o.density / l.density).toFixed(2);
+  const pct = Math.round(subFrac * 100);
+  document.getElementById('result').innerHTML = `
+    <strong>${o.emoji} ${o.name}</strong> (${o.density} kg/m³) v <strong>${l.name}</strong> (${l.density} kg/m³)
+    &nbsp;·&nbsp; hustota tělesa ÷ kapaliny = <strong>${ratio}</strong><br>
+    <div class="verdict ${floats ? 'float' : 'sink'}" style="margin-top:4px">
+      ${floats
+        ? `✅ W — PLAVE! ${pct}% pod hladinou, ${100-pct}% nad hladinou. Vztlak &gt; tíha, no cap.`
+        : `❌ L — KLESÁ. Těleso je ${ratio}× hustší než kapalina. Vztlak to nezvládne. Gg no re.`}
+    </div>`;
+}
+
+let lastTime = null;
+function frame(ts) {
+  if (!lastTime) lastTime = ts;
+  const dt = Math.min((ts - lastTime) / 1000, 0.05);
+  lastTime = ts;
+  wavePhase += dt * 2.2;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#07070f';
+  ctx.fillRect(0, 0, W, H);
+
+  liq = getLiq(); obj = obj || getObj();
+
+  drawWater(liq);
+  drawTankWalls();
+  drawLiquidLabel(liq);
+
+  // update physics
+  const floats = obj.density < liq.density;
+  let subFrac = 0;
+
+  if (state === 'falling') {
+    objVY += GRAVITY * dt;
+    objY += objVY * dt;
+
+    const objBottom = objY + OBJ_H;
+    if (objBottom >= LIQUID_TOP) {
+      const entered = Math.min((objBottom - LIQUID_TOP) / OBJ_H, 1);
+      subFrac = entered;
+
+      if (entered > 0.05 && splashParticles.length === 0 && objVY > 50) {
+        spawnSplash(W/2);
+      }
+      if (Math.random() < 0.3 && entered > 0.1) spawnBubble();
+
+      if (floats) {
+        settleTarget = LIQUID_TOP - OBJ_H * (1 - obj.density / liq.density);
+      } else {
+        settleTarget = H - OBJ_H - 4;
+      }
+
+      // transition: object passed settle point going down, or hit bottom
+      if (floats && objY >= settleTarget) {
+        objY = settleTarget; objVY = 0; state = 'settling';
+        updateResult(obj, liq, true, obj.density / liq.density);
+      } else if (!floats && objY >= settleTarget) {
+        objY = settleTarget; objVY = 0; state = 'resting';
+        updateResult(obj, liq, false, 1);
+      }
+    }
+  }
+
+  if (state === 'settling') {
+    objY += (settleTarget - objY) * dt * 8;
+    objVY *= 0.85;
+    if (Math.abs(objY - settleTarget) < 0.5) { objY = settleTarget; state = 'resting'; }
+    subFrac = Math.min((objY + OBJ_H - LIQUID_TOP) / OBJ_H, 1);
+    arrowAlpha += dt * 2;
+    updateResult(obj, liq, floats, Math.max(subFrac, 0));
+  }
+
+  if (state === 'resting') {
+    subFrac = floats ? obj.density / liq.density : 1;
+    arrowAlpha = Math.min(arrowAlpha + dt * 2, 1);
+    // gentle bobbing
+    if (floats) objY = settleTarget + Math.sin(wavePhase * 0.9) * 1.5;
+  }
+
+  if (state === 'falling' && objY + OBJ_H < LIQUID_TOP) {
+    subFrac = 0;
+  }
+
+  // update splash particles
+  splashParticles = splashParticles.filter(p => p.life > 0);
+  splashParticles.forEach(p => {
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    p.vy += 400 * dt;
+    p.life -= dt / p.maxLife;
+    const pr = Math.max(0, p.r * p.life);
+    if (pr <= 0) return;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, pr, 0, Math.PI*2);
+    ctx.fillStyle = liq.surf + Math.floor(p.life * 200).toString(16).padStart(2,'0');
+    ctx.fill();
+  });
+
+  // bubbles (only when sinking)
+  if (!floats && state === 'resting') {
+    if (Math.random() < 0.08) spawnBubble();
+  }
+  bubbles = bubbles.filter(b => b.life > 0);
+  bubbles.forEach(b => {
+    b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt * 1.1;
+    if (b.y < LIQUID_TOP || b.life <= 0) { b.life = 0; return; }
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+    ctx.strokeStyle = liq.surf + Math.floor(b.life * 160).toString(16).padStart(2,'0');
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  // waterline overlay (clip object at surface when floating)
+  if (floats && (state === 'settling' || state === 'resting') && objY < LIQUID_TOP) {
+    ctx.save();
+    ctx.globalAlpha = 0.55;
+    const wg = ctx.createLinearGradient(0, LIQUID_TOP, 0, LIQUID_TOP + 18);
+    wg.addColorStop(0, liq.surf + 'aa');
+    wg.addColorStop(1, liq.surf + '00');
+    ctx.fillStyle = wg;
+    ctx.fillRect(W/2 - OBJ_W/2 - 4, LIQUID_TOP, OBJ_W + 8, 18);
+    ctx.restore();
+  }
+
+  drawForceArrows(objY, subFrac, floats);
+  drawObject(obj, objY);
+
+  animId = requestAnimationFrame(frame);
+}
+
+document.getElementById('dropBtn').addEventListener('click', () => {
+  if (state === 'idle') {
+    obj = getObj(); liq = getLiq();
+    drop();
+  } else {
+    reset(true);
+  }
+});
+document.getElementById('resetBtn').addEventListener('click', () => reset(false));
+document.getElementById('objSel').addEventListener('change', () => reset(false));
+document.getElementById('liqSel').addEventListener('change', () => reset(false));
+
+reset(false);
+requestAnimationFrame(frame);
 </script>
 </body>
 </html>
