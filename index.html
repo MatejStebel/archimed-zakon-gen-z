@@ -723,32 +723,50 @@ function frame(ts) {
   let subFrac = 0;
 
   if (state === 'falling') {
+    const objBottom = objY + OBJ_H;
+    const FLOOR = H - OBJ_H - 4;
+
+    // gravity always
     objVY += GRAVITY * dt;
+
+    // buoyancy when entering liquid
+    if (objBottom > LIQUID_TOP) {
+      subFrac = Math.min((objBottom - LIQUID_TOP) / OBJ_H, 1);
+
+      if (subFrac > 0.05 && splashParticles.length === 0 && objVY > 50) spawnSplash(W/2);
+      if (Math.random() < 0.3 && subFrac > 0.1) spawnBubble();
+
+      // original buoyancy formula (keeps the bouncy feel)
+      const buoyForce = liq.density * g * subFrac * OBJ_W * OBJ_H * 0.00004;
+      const gravForce = obj.density * g * 0.00004 * OBJ_W * OBJ_H;
+      const netAcc = (gravForce - buoyForce) / (obj.density * 0.00004 * OBJ_W * OBJ_H) * 60;
+      objVY += (netAcc - GRAVITY) * dt;
+    }
+
     objY += objVY * dt;
 
-    const objBottom = objY + OBJ_H;
-    if (objBottom >= LIQUID_TOP) {
-      const entered = Math.min((objBottom - LIQUID_TOP) / OBJ_H, 1);
-      subFrac = entered;
-
-      if (entered > 0.05 && splashParticles.length === 0 && objVY > 50) {
-        spawnSplash(W/2);
-      }
-      if (Math.random() < 0.3 && entered > 0.1) spawnBubble();
-
+    // floor is the hard limit — nothing goes below it
+    if (objY >= FLOOR) {
+      objY = FLOOR;
       if (floats) {
-        settleTarget = LIQUID_TOP - OBJ_H * (1 - obj.density / liq.density);
+        // floater bounces off floor and rises toward equilibrium
+        objVY = -Math.abs(objVY) * 0.4;
       } else {
-        settleTarget = H - OBJ_H - 4;
-      }
-
-      // transition: object passed settle point going down, or hit bottom
-      if (floats && objY >= settleTarget) {
-        objY = settleTarget; objVY = 0; state = 'settling';
-        updateResult(obj, liq, true, obj.density / liq.density);
-      } else if (!floats && objY >= settleTarget) {
-        objY = settleTarget; objVY = 0; state = 'resting';
+        // sinker stays on floor
+        objVY = 0;
+        state = 'resting';
         updateResult(obj, liq, false, 1);
+      }
+    }
+
+    // floater: when moving upward and crosses settle target → done
+    if (floats) {
+      settleTarget = LIQUID_TOP - OBJ_H * (1 - obj.density / liq.density);
+      if (objVY < 0 && objY <= settleTarget) {
+        objY = settleTarget;
+        objVY = 0;
+        state = 'settling';
+        updateResult(obj, liq, true, obj.density / liq.density);
       }
     }
   }
